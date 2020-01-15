@@ -7,16 +7,15 @@ from flask import Flask, jsonify, request
 """
 Server*
 Modify the server we created to:
-* Remove the `proof_of_work` function from the server.
-* Change `valid_proof` to require *6* leading zeroes.
-* Add an endpoint called `last_block` that returns the last block in the chain
-* Modify the `mine` endpoint to instead receive and validate or reject a new proof sent by a client.
-    * It should accept a POST
-    * Use `data = request.get_json()` to pull the data out of the POST
-        * Note that `request` and `requests` both exist in this project
-    * Check that 'proof', and 'id' are present
-        * return a 400 error using `jsonify(response)` with a 'message'
-* Return a message indicating success or failure.  Remember, a valid proof should fail for all senders except the first.
+
+[ ] Add an endpoint called `last_block` that returns the last block in the chain
+[ ] Modify the `mine` endpoint to instead receive and validate or reject a new proof sent by a client.
+    [ ] It should accept a POST
+    [ ] Use `data = request.get_json()` to pull the data out of the POST
+        [ ] Note that `request` and `requests` both exist in this project
+    [ ] Check that 'proof', and 'id' are present
+        [ ] return a 400 error using `jsonify(response)` with a 'message'
+[ ] Return a message indicating success or failure.  Remember, a valid proof should fail for all senders except the first.
 
 """
 class Blockchain(object):
@@ -56,23 +55,23 @@ class Blockchain(object):
     @property
     def last_block(self):
         return self.chain[-1]
-    def proof_of_work(self, block):
-        """
+    # def proof_of_work(self, block):
+    #     """
         
-        """
-        block_string = json.dumps(block)
-        proof = 0
-        while self.valid_proof(block_string, proof) is False:
-            proof += 1
-        return proof
+    #     """
+    #     block_string = json.dumps(block)
+    #     proof = 0
+    #     while self.valid_proof(block_string, proof) is False:
+    #         proof += 1
+    #     return proof
     @staticmethod
     def valid_proof(block_string, proof):
         """
-        
+        Change `valid_proof` to require *6[ ] leading zeroes.
         """
         guess = f"{block_string}{proof}".encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:3] == "000"
+        return guess_hash[:3] == "000000"
         
 
 # Instantiate our Node
@@ -98,6 +97,16 @@ def full_chain():
         # TODO: Return the chain and its current length
         'length': len(blockchain.chain),
         'chain': blockchain.chain
+    }
+    return jsonify(response), 200
+
+    # Add an endpoint called `last_block` that returns the last block in the chain
+
+@app.route('/last_block', methods=['GET'])
+def last_block():
+    last_blockchain = blockchain.last_block
+    response = {
+        'last_blockchain': last_blockchain
     }
     return jsonify(response), 200
 # Run the program on port 5000
