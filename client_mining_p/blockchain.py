@@ -4,20 +4,6 @@ from time import time
 from uuid import uuid4
 from flask import Flask, jsonify, request
 
-"""
-Server*
-Modify the server we created to:
-
-[ ] Add an endpoint called `last_block` that returns the last block in the chain
-[ ] Modify the `mine` endpoint to instead receive and validate or reject a new proof sent by a client.
-    [ ] It should accept a POST
-    [ ] Use `data = request.get_json()` to pull the data out of the POST
-        [ ] Note that `request` and `requests` both exist in this project
-    [ ] Check that 'proof', and 'id' are present
-        [ ] return a 400 error using `jsonify(response)` with a 'message'
-[ ] Return a message indicating success or failure.  Remember, a valid proof should fail for all senders except the first.
-
-"""
 class Blockchain(object):
     def __init__(self):
         self.chain = []
@@ -71,7 +57,7 @@ class Blockchain(object):
         """
         guess = f"{block_string}{proof}".encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:3] == "000000"
+        return guess_hash[:6] == "000000"
         
 
 # Instantiate our Node
@@ -80,17 +66,30 @@ app = Flask(__name__)
 node_identifier = str(uuid4()).replace('-', '')
 # Instantiate the Blockchain
 blockchain = Blockchain()
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
-    # Run the proof of work algorithm to get the next proof
-    proof = blockchain.proof_of_work(blockchain.last_block)
-    # Forge the new Block by adding it to the chain with the proof
-    previous_hash = blockchain.hash(blockchain.last_block)
-    block = blockchain.new_block(proof, previous_hash)
+    values = request.get_json()
+    required = ['proof', 'id']
+    error_messages = []
+
+    if 'proof' not in values:
+        error_messages.append('Missing field `proof`')
+    if 'id' not in values:
+        error_messages.append('Missing field `id`')
+
+    if len(error_messages) > 0:
+        return jsonify({'message': error_messages}), 400
+    # # if not all(k in values for k in required):
+    #     error = {'message': 'Missing a required key'}
+    #     return jsonify(error), 400
+    
+    block = blockchain.new_block(values['proof'], values['id'])
     response = {
-        'new_block': block
+        'message': f'Transaction is success, {block}'
     }
     return jsonify(response), 200
+
+
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
@@ -100,9 +99,8 @@ def full_chain():
     }
     return jsonify(response), 200
 
-    # Add an endpoint called `last_block` that returns the last block in the chain
-
 @app.route('/last_block', methods=['GET'])
+# Add an endpoint called `last_block` that returns the last block in the chain
 def last_block():
     last_blockchain = blockchain.last_block
     response = {
