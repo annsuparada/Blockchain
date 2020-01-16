@@ -85,7 +85,8 @@ def mine():
     
     block = blockchain.new_block(values['proof'], values['id'])
     response = {
-        'message': f'Transaction is success, {block}'
+        'message': 'New Block Forged',
+        'new_block': block
     }
     return jsonify(response), 200
 
