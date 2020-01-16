@@ -68,26 +68,27 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
-    values = request.get_json()
+    data = request.get_json()
     required = ['proof', 'id']
-    error_messages = []
-
-    if 'proof' not in values:
-        error_messages.append('Missing field `proof`')
-    if 'id' not in values:
-        error_messages.append('Missing field `id`')
-
-    if len(error_messages) > 0:
-        return jsonify({'message': error_messages}), 400
-    # # if not all(k in values for k in required):
-    #     error = {'message': 'Missing a required key'}
-    #     return jsonify(error), 400
+    if not all(k in data for k in required):
+        error = {'message': 'Missing a required key'}
+        return jsonify(error), 400
     
-    block = blockchain.new_block(values['proof'], values['id'])
-    response = {
-        'message': 'New Block Forged',
-        'new_block': block
-    }
+    last_block = blockchain.last_block
+    last_block_string =json.dumps(last_block, sort_keys=True)
+
+    if blockchain.valid_proof(last_block_string, data['proof']):
+        previous_hash = blockchain.hash(blockchain.last_block)
+        block = blockchain.new_block(data['proof'], previous_hash)        
+
+        response = {
+            'message': 'New Block Forged',
+            'new_block': block
+        }
+    else:
+        response = {
+            'message': 'Proof is invalid or already submitted'
+        }
     return jsonify(response), 200
 
 

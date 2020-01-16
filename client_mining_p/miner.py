@@ -63,7 +63,9 @@ if __name__ == '__main__':
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
-        
+        # last_block = data['last_block']
+        # new_proof = proof_of_work(last_block)
+        # or like this
         new_proof = proof_of_work(data.get('last_block'))
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
